@@ -5,6 +5,7 @@ import getStripeInstance from './client';
 
 export async function createCheckoutSession(
   stripePriceId: string,
+  customerId?: string,
 ): Promise<Stripe.Checkout.Session> {
   const stripe = getStripeInstance();
   const APP_BASE_URL = process.env.APP_BASE_URL;
@@ -19,6 +20,9 @@ export async function createCheckoutSession(
     success_url: `${APP_BASE_URL}/dashboard`,
     cancel_url: `${APP_BASE_URL}/dashboard/pricing`,
   };
+  if (customerId) {
+    sessionParams.customer = customerId;
+  }
 
   return stripe.checkout.sessions.create(sessionParams);
 }
