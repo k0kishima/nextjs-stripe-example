@@ -4,6 +4,7 @@
     "build": "next build",
     "dev": "next dev",
     "lint": "next lint",
+    "migrateStripeSchema": "node -r dotenv/config ./scripts/stripe-db-migration.js",
     "prettier": "prettier --write --ignore-unknown .",
     "prettier:check": "prettier --check --ignore-unknown .",
     "seed": "node -r dotenv/config ./scripts/seed.js",
