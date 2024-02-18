@@ -20,3 +20,5 @@
   - [サンプルコード](https://github.com/k0kishima/nextjs-stripe-example/tree/chapter-06)
 - [Webhook でサブスクリプションデータを受け取る](https://zenn.dev/k0kishima/books/f07cffba6e0fab/viewer/c29490)
   - [サンプルコード](https://github.com/k0kishima/nextjs-stripe-example/tree/chapter-07)
+- [サブスクリプションの有効性をチェックする](https://zenn.dev/k0kishima/books/f07cffba6e0fab/viewer/63bda6)
+  - [サンプルコード](https://github.com/k0kishima/nextjs-stripe-example/tree/chapter-08)
