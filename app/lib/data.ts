@@ -262,3 +262,39 @@ export async function hasValidSubscription(email: string, checkTimestamp: Date =
     throw new Error('Failed to check for valid subscription.');
   }
 }
+
+export async function getValidSubscription(email: string, checkTimestamp: Date = new Date()) {
+  try {
+    const userResult = await sql`SELECT id FROM users WHERE email=${email}`;
+    const userId = userResult.rows[0]?.id;
+
+    if (!userId) {
+      throw new Error('User not found');
+    }
+
+    const timestampStr = checkTimestamp.toISOString().replace('T', ' ').substring(0, 19);
+
+    const subscriptionResult = await sql`
+      SELECT * FROM subscriptions
+      WHERE user_id=${userId}
+      AND start_timestamp <= ${timestampStr}
+      AND end_timestamp >= ${timestampStr}
+      LIMIT 1;  -- 仮に複数の有効なサブスクがある場合は最初の1つを取得
+    `;
+
+    if (subscriptionResult.rowCount === 0) {
+      return null;
+    }
+
+    const subscription = subscriptionResult.rows[0];
+    return {
+      id: subscription.id,
+      stripe_subscription_id: subscription.stripe_subscription_id,
+      start_timestamp: subscription.start_timestamp,
+      end_timestamp: subscription.end_timestamp,
+    };
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to retrieve valid subscription.');
+  }
+}
