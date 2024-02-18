@@ -237,7 +237,10 @@ export async function getUser(email: string) {
   }
 }
 
-export async function hasValidSubscription(email: string, checkTimestamp: Date = new Date()) {
+export async function hasValidSubscription(
+  email: string,
+  checkTimestamp: Date = new Date(),
+) {
   try {
     const userResult = await sql`SELECT id FROM users WHERE email=${email}`;
     const userId = userResult.rows[0]?.id;
@@ -246,7 +249,10 @@ export async function hasValidSubscription(email: string, checkTimestamp: Date =
       throw new Error('User not found');
     }
 
-    const timestampStr = checkTimestamp.toISOString().replace('T', ' ').substring(0, 19);
+    const timestampStr = checkTimestamp
+      .toISOString()
+      .replace('T', ' ')
+      .substring(0, 19);
 
     const subscriptionResult = await sql`
       SELECT COUNT(*) FROM subscriptions
@@ -263,7 +269,10 @@ export async function hasValidSubscription(email: string, checkTimestamp: Date =
   }
 }
 
-export async function getValidSubscription(email: string, checkTimestamp: Date = new Date()) {
+export async function getValidSubscription(
+  email: string,
+  checkTimestamp: Date = new Date(),
+) {
   try {
     const userResult = await sql`SELECT id FROM users WHERE email=${email}`;
     const userId = userResult.rows[0]?.id;
@@ -272,7 +281,10 @@ export async function getValidSubscription(email: string, checkTimestamp: Date =
       throw new Error('User not found');
     }
 
-    const timestampStr = checkTimestamp.toISOString().replace('T', ' ').substring(0, 19);
+    const timestampStr = checkTimestamp
+      .toISOString()
+      .replace('T', ' ')
+      .substring(0, 19);
 
     const subscriptionResult = await sql`
       SELECT * FROM subscriptions
@@ -296,5 +308,32 @@ export async function getValidSubscription(email: string, checkTimestamp: Date =
   } catch (error) {
     console.error('Database Error:', error);
     throw new Error('Failed to retrieve valid subscription.');
+  }
+}
+
+export async function hasCancellationHistory(stripeSubscriptionId: string) {
+  try {
+    const subscriptionResult = await sql`
+      SELECT id FROM subscriptions
+      WHERE stripe_subscription_id = ${stripeSubscriptionId}
+      LIMIT 1;
+    `;
+
+    if (subscriptionResult.rowCount === 0) {
+      return false;
+    }
+
+    const subscriptionId = subscriptionResult.rows[0].id;
+
+    const cancellationResult = await sql`
+      SELECT id FROM subscription_cancellations
+      WHERE subscription_id = ${subscriptionId}
+      LIMIT 1;
+    `;
+
+    return cancellationResult.rowCount > 0;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to check for cancellation history.');
   }
 }
