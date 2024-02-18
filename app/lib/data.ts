@@ -236,3 +236,29 @@ export async function getUser(email: string) {
     throw new Error('Failed to fetch user.');
   }
 }
+
+export async function hasValidSubscription(email: string, checkTimestamp: Date = new Date()) {
+  try {
+    const userResult = await sql`SELECT id FROM users WHERE email=${email}`;
+    const userId = userResult.rows[0]?.id;
+
+    if (!userId) {
+      throw new Error('User not found');
+    }
+
+    const timestampStr = checkTimestamp.toISOString().replace('T', ' ').substring(0, 19);
+
+    const subscriptionResult = await sql`
+      SELECT COUNT(*) FROM subscriptions
+      WHERE user_id=${userId}
+      AND start_timestamp <= ${timestampStr}
+      AND end_timestamp >= ${timestampStr}
+    `;
+
+    const count = parseInt(subscriptionResult.rows[0].count, 10);
+    return count > 0;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to check for valid subscription.');
+  }
+}
