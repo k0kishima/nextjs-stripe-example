@@ -6,6 +6,7 @@ import { revalidatePath } from 'next/cache';
 import { redirect } from 'next/navigation';
 import { signIn } from '@/auth';
 import { AuthError } from 'next-auth';
+import { cancelSubscription as cancelSubscriptionRequest } from './stripe/subscription';
 
 const FormSchema = z.object({
   id: z.string(),
@@ -137,4 +138,31 @@ export async function authenticate(
     }
     throw error;
   }
+}
+
+export async function cancelSubscription(stripeSubscriptionId: string) {
+  await cancelSubscriptionRequest(stripeSubscriptionId);
+
+  try {
+    const subscriptionResult = await sql`
+      SELECT id FROM subscriptions
+      WHERE stripe_subscription_id = ${stripeSubscriptionId}
+      LIMIT 1;
+    `;
+    if (subscriptionResult.rowCount === 0) {
+      throw new Error('Subscription not found');
+    }
+
+    const subscriptionId = subscriptionResult.rows[0].id;
+    await sql`
+      INSERT INTO subscription_cancellations (subscription_id, canceled_timestamp)
+      VALUES (${subscriptionId}, NOW());
+    `;
+  } catch (error) {
+    console.error('Database Error:', error);
+    throw new Error('Failed to record subscription cancellation.');
+  }
+
+  revalidatePath('/dashboard/subscriptions');
+  redirect('/dashboard/subscriptions');
 }
