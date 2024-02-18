@@ -44,11 +44,37 @@ async function createSubscriptionsTable(client) {
   }
 }
 
+async function createSubscriptionCancellationsTable(client) {
+  try {
+    await client.sql`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`;
+
+    const createTable = await client.sql`
+      CREATE TABLE IF NOT EXISTS subscription_cancellations (
+        id UUID DEFAULT uuid_generate_v4() PRIMARY KEY,
+        subscription_id UUID NOT NULL REFERENCES subscriptions(id),
+        canceled_timestamp TIMESTAMP WITH TIME ZONE NOT NULL,
+        CONSTRAINT fk_subscription
+            FOREIGN KEY(subscription_id)
+            REFERENCES subscriptions(id)
+            ON DELETE CASCADE
+      );
+    `;
+
+    console.log(`Created "subscription_cancellations" table`);
+    return createTable;
+  } catch (error) {
+    console.error('Error creating subscription_cancellations table:', error);
+    throw error;
+  }
+}
+
+
 async function main() {
   const client = await db.connect();
 
   await createStripeCustomersTable(client);
   await createSubscriptionsTable(client);
+  await createSubscriptionCancellationsTable(client);
 
   await client.end();
 }
