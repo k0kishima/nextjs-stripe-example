@@ -1,8 +1,9 @@
 import { auth } from '@/auth';
 import { lusitana } from '@/app/ui/fonts';
-import { getValidSubscription } from '@/app/lib/data';
+import { getValidSubscription, hasCancellationHistory } from '@/app/lib/data';
 import { getCreditCard } from '@/app/lib/stripe/credit-card';
 import SubscriptionInformation from '@/app/ui/subscription-information';
+import CancelSubscriptionButton from '@/app/ui/cancel-subscription-button';
 
 export default async function Page() {
   const currentUser = await auth().then((session) => session?.user);
@@ -21,6 +22,10 @@ export default async function Page() {
         <h1 className={`${lusitana.className} text-2xl`}>Subscription Information</h1>
       </div>
       <SubscriptionInformation subscription={subscription} creditCard={creditCard} />
+      <CancelSubscriptionButton
+        subscriptionId={subscription.stripe_subscription_id}
+        disabled={await hasCancellationHistory(subscription.stripe_subscription_id)}
+      />
     </div>
   );
 }
